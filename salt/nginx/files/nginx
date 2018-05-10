@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# chkconfig: 2345 55 25
+#上面的必须加才能加入chkconfig，2345表示系统运行级别是2，3，4或者5时都启动此服务
+#20，是启动的优先级，80是关闭的优先级，如果启动优先级配置的数太小时如0时，
+#则有可能启动不成功，因为此时可能其依赖的网络服务还没有启动，从而导致自启动失败。
+
+#下面代码之前本来是proc.communicate(timeout=3)后来发现2.7没有timeout属性。。。
+__author__='XianFu Jiang'
+import sys
+import subprocess
+import time
+
+def start(sname,sbin):
+    print('Starting nginx... ')
+    try:
+        cmd_check='ss -anp | grep nginx'
+        proc=subprocess.Popen(cmd_check,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        if proc.communicate()[0]:
+            print('%s is already running ...' % sname)
+            exit(1)
+        else:
+            cmd_start=sbin
+            start_server=subprocess.Popen(cmd_start,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            outs,errs=start_server.communicate()
+            if start_server.returncode:
+                print('start error: '+errs.decode())
+                exit(1)
+            else:
+                print('start %s is successed ...' % sname)
+    except Exception as e:
+        print('faile content is %s' % e)
+        exit(1)
+
+
+
+def stop(sname,sbin):
+    print('Stoping nginx... ')
+    try:
+        cmd_check='ss -anp | grep nginx'
+        proc=subprocess.Popen(cmd_check,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        if not proc.communicate()[0]:
+            print('%s is no running ...' % sname)
+            exit(1)
+        else:
+            cmd_stop=sbin+' -s stop'
+            stop_server=subprocess.Popen(cmd_stop,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            outs,errs=stop_server.communicate()
+            if stop_server.returncode:
+                print('stop error: '+errs.decode())
+                exit(1)
+            else:
+                print('stop %s is successed ...' % sname)
+    except Exception as e:
+        print('faile content is %s' % e)
+        exit(1)
+
+   
+
+def status(sname):
+    try:
+        cmd_check='ss -anp | grep nginx'
+        proc=subprocess.Popen(cmd_check,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        if  proc.communicate()[0]:
+            print('%s is running ...' % sname)
+        else:
+            print('%s is stoped ...' % sname)
+    except Exception as e:
+        print('faile content is %s' % e)
+        exit(1)
+   
+
+def test(sbin,sconfig):
+    cmd_test=sbin+' -t -c '+sconfig
+    try:
+        test_server=subprocess.Popen(cmd_test,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        outs,errs=test_server.communicate()
+        if 'test failed' in outs.decode():
+            print(outs.decode())
+            exit(1)
+        else:
+            print(outs.decode())
+    except Exception as e:
+        print('faile content is %s' % e)
+    
+
+def restart(sname,sbin):
+    stop(sname,sbin)
+    time.sleep(1)
+    start(sname,sbin)
+
+def reloads(sname,sbin):
+    print("Reload service %s... " % sname)
+    try:
+        cmd_check='ss -anp | grep nginx'
+        proc=subprocess.Popen(cmd_check,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        if  proc.communicate()[0]:
+            cmd_reload=sbin+' -s reload'
+            reloads=subprocess.Popen(cmd_reload,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            outs,errs=reloads.communicate()
+            if reloads.returncode == 0:
+                print('%s is reload successed' % sname)
+            else:
+                print(reloads.stderr.decode())
+                exit(1)
+        else:
+            print(r"%s is no running can't reload..." % sname)
+            exit(1)
+    except Exception as e:
+        print('faile content is %s' % e)
+        exit(1)
+
+if __name__ == "__main__":
+    server_name='nginx'
+    server_bin=r'/usr/local/nginx/sbin/nginx'
+    configfile=r'/usr/local/nginx/conf/nginx.conf'
+    help_cmd='Usage: service < option > |start|stop|reload|restart|status|test'
+    if len(sys.argv)==2:
+        post=sys.argv[1]
+        if post=='start':
+            start(server_name,server_bin)
+        elif post=='stop':
+            stop(server_name,server_bin)
+        elif post == 'status':
+            status(server_name)
+        elif post == 'test':
+            test(server_bin,configfile)
+        elif post == 'restart':
+            restart(server_name,server_bin)
+        elif post == 'reload':
+            reloads(server_name,server_bin)
+        else:
+            print(help_cmd)
+    else:
+        print(help_cmd)
+
