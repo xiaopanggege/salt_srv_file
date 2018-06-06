@@ -18,7 +18,7 @@
 #所以如果要重装就yum remove salt* 会自动帮你删除repo和key的不需要手动删除
 gpg_key:
   cmd.run:
-    - name: rpm --import https://mirrors.ustc.edu.cn/salt/yum/redhat/{{ grains['osmajorrelease']}}/{{ grains['osarch']}}/archive/2017.7.5/SALTSTACK-GPG-KEY.pub
+    - name: rpm --import https://mirrors.ustc.edu.cn/salt/yum/redhat/{{ grains['osmajorrelease']}}/{{ grains['osarch']}}/archive/2017.7.3/SALTSTACK-GPG-KEY.pub
     - template: jinja
 
 # 添加repo文件

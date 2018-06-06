@@ -1,0 +1,18 @@
+[Unit]
+Description=mysqld
+After=network.target
+After=syslog.target
+
+[Service]
+Type=simple
+User=mysql
+Group=mysql
+ExecStart=/usr/local/mysql/bin/mysqld_safe  
+# 下面这个必须加，因为用systemctl启动默认限制了程序只能打开1024个文件描述符
+LimitNOFILE = 65535
+TimeoutSec=300
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+Alias=mysqld.service

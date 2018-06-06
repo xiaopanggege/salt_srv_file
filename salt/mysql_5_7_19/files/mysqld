@@ -44,8 +44,7 @@
 # overwritten by settings in the MySQL configuration files.
 
 basedir=/usr/local/mysql
-datadir=/data/mysql3306/data
-cnfPath=/data/mysql3306/my.cnf
+datadir=/data/mysql/data
 
 
 # Default value, in seconds, afterwhich the script should timeout waiting
@@ -62,7 +61,7 @@ lock_file_path="$lockdir/mysql"
 # The following variables are only set for letting mysql.server find things.
 
 # Set some defaults
-mysqld_pid_file_path=/data/mysql3306/mysql.pid
+mysqld_pid_file_path=/data/mysql/mysql.pid
 if test -z "$basedir"
 then
   basedir=/usr/local/mysql
