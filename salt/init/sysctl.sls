@@ -5,10 +5,13 @@ fs.file-max:
 
 fs.inotify.max_user_watches:
   sysctl.present:
-    - value: 65535
+    - value: 65536
 
 net.ipv4.conf.default.rp_filter:
   sysctl.present:
+{% if grains.osmajorrelease == 7 %}
+    - value: 2
+{% else %}
     - value: 1
 
 net.ipv4.conf.default.accept_source_route:
@@ -21,11 +24,11 @@ net.ipv4.tcp_syncookies:
 
 kernel.msgmnb:
   sysctl.present:
-    - value: 65535
+    - value: 65536
 
 kernel.msgmax:
   sysctl.present:
-    - value: 65535
+    - value: 65536
 
 # 下面2个参数可以设置为内存的90%这里因为语法问题90%我就把1024改成800来代替
 kernel.shmmax:
@@ -40,10 +43,12 @@ net.ipv4.tcp_max_tw_buckets:
   sysctl.present:
     - value: 6666
 
+# 默认就是1
 net.ipv4.tcp_sack:
   sysctl.present:
     - value: 1
 
+# 默认就是1
 net.ipv4.tcp_window_scaling:
   sysctl.present:
     - value: 1
@@ -105,6 +110,7 @@ net.ipv4.tcp_syn_retries:
   sysctl.present:
     - value: 2
 
+# 默认就是0,开启会提高性能但对个别情况有影响
 net.ipv4.tcp_tw_recycle:
   sysctl.present:
     - value: 0
@@ -123,7 +129,7 @@ net.ipv4.tcp_fin_timeout:
 
 net.ipv4.tcp_keepalive_time:
   sysctl.present:
-    - value: 60
+    - value: 1800
 
 net.ipv4.ip_local_port_range:
   sysctl.present:
