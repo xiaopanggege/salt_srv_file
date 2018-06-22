@@ -66,7 +66,7 @@ create_data:
       - cmd: mysql_tar
 
 
-#添加配置文件
+#添加配置文件,注意如果使用{{grains['num_cpus']}}需要加template: jinja
 mysql_cnf:
   file.managed:
     - name: /etc/my.cnf
@@ -75,6 +75,10 @@ mysql_cnf:
     - makedirs: True
     - source: salt://mysql_5_7_19/files/my.cnf
     - unless: test -e /etc/my.cnf
+    - template: jinja
+    - defaults:
+        mem_half: {{grains['mem_total']//1024//2}}
+        num_cpus: {{grains['num_cpus']}}
     - require:
       - cmd: create_data
 
