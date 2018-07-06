@@ -13,6 +13,7 @@ net.ipv4.conf.default.rp_filter:
     - value: 2
 {% else %}
     - value: 1
+{% endif %}
 
 net.ipv4.conf.default.accept_source_route:
   sysctl.present:
