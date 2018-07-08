@@ -4,3 +4,4 @@ include:
   - init.limits
   - init.sysctl
   - init.datetime
+  - init.server
