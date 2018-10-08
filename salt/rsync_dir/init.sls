@@ -38,14 +38,25 @@ rsync_dir:
       - file: mkdir_name_path
     {% endif %}
 {% if grains['os']=='CentOS' and pillar['user']!='root' %}
+# 发现竟然会因为文件编码utf8无法解析而报错，所以改成cmd.run来修改权限了，无语
+#chown_dir:
+#  file.directory:
+#    - name: {{pillar['mkdir_path']}}
+#    - user: {{ pillar['user'] }}
+#    - group: {{ pillar['user'] }}
+#    - recurse:
+#      - user
+#      - group
+#    - env:
+#      - LC_ALL: 'zh_CN.UTF-8'
+#    - require:
+#      - cmd: rsync_dir
+
 chown_dir:
-  file.directory:
-    - name: {{pillar['mkdir_path']}}
-    - user: {{ pillar['user'] }}
-    - group: {{ pillar['user'] }}
-    - recurse:
-      - user
-      - group
+  cmd.run:
+    - name: chown -R {{ pillar['user'] }}.{{ pillar['user'] }} {{pillar['mkdir_path']}}
+    - env:
+      - LC_ALL: 'zh_CN.UTF-8'
     - require:
       - cmd: rsync_dir
 {% endif %}
