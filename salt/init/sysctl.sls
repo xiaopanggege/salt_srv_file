@@ -15,3 +15,8 @@ sysctl_conf:
       {% endif %}
         shmmax: {{grains.mem_total*1024*800}}
         shmall: {{grains.mem_total*200}}
+  cmd.run:
+    - name: sysctl -p
+    - onchanges:
+        - file: sysctl_conf
+
