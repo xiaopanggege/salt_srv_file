@@ -18,64 +18,36 @@ nginx_pkg:
 #传送nginx安装包并解压
 nginx_src:
   file.managed:
-    - name: /usr/local/src/nginx-1.10.3.tar.gz
+    - name: /usr/local/src/nginx-1.14.1.tar.gz
     - user: root
     - group: root
     - makedirs: True
-    - source: salt://nginx/files/nginx-1.10.3.tar.gz
-    - unless: test -e /usr/local/src/nginx-1.10.3.tar.gz
+    - source: salt://nginx/files/nginx-1.14.1.tar.gz
+    - unless: test -e /usr/local/src/nginx-1.14.1.tar.gz
 
 nginx_tar:
   cmd.run:
     - cwd: /usr/local/src
-    - unless: test -d nginx-1.10.3
-    - name: tar -xf nginx-1.10.3.tar.gz
+    - unless: test -d nginx-1.14.1
+    - name: tar -xf nginx-1.14.1.tar.gz
     - require:
       - file: nginx_src
 
-#传送nginx第三方模块nginx_upstream_check_module-master并解压并打补丁呵呵
-nginx_upstream_check_module-master:
-  file.managed:
-    - name: /usr/local/src/nginx_upstream_check_module-master.zip
-    - user: root
-    - group: root
-    - makedirs: True
-    - source: salt://nginx/files/nginx_upstream_check_module-master.zip
-    - unless: test -e /usr/local/src/nginx_upstream_check_module-master.zip
-
-nginx_upstream_check_module-master_unzip:
-  cmd.run:
-    - cwd: /usr/local/src
-    - unless: test -d nginx_upstream_check_module-master
-    - name: unzip nginx_upstream_check_module-master.zip
-    - require:
-      - file: nginx_upstream_check_module-master
-
-nginx_upstream_check_module-master_patch:
-  cmd.run:
-    - name: patch -p0 < /usr/local/src/nginx_upstream_check_module-master/check_1.11.1+.patch
-    - cwd: /usr/local/src/nginx-1.10.3
-    - onchanges:
-      - cmd: nginx_upstream_check_module-master_unzip
-      - cmd: nginx_tar
-
 #传送nginx第三方模块ngx_cache_purge
-nginx_ngx_cache_purge:
+nginx-module-vts:
   file.managed:
-    - name: /usr/local/src/ngx_cache_purge-2.3.tar.gz
+    - name: /usr/local/src/nginx-module-vts.tar.gz  
     - user: root
     - group: root
     - makedirs: True
-    - source: salt://nginx/files/ngx_cache_purge-2.3.tar.gz
-    - unless: test -e /usr/local/src/ngx_cache_purge-2.3.tar.gz
-
-nginx_ngx_cache_purge_tar:
+    - source: salt://nginx/files/nginx-module-vts.tar.gz  
+    - unless: test -e /usr/local/src/nginx-module-vts.tar.gz  
   cmd.run:
     - cwd: /usr/local/src
-    - unless: test -d ngx_cache_purge-2.3
-    - name: tar -xf ngx_cache_purge-2.3.tar.gz
+    - unless: test -d nginx-module-vts
+    - name: tar -xf nginx-module-vts.tar.gz
     - require:
-      - file: nginx_ngx_cache_purge
+      - file: nginx-module-vts
 
 #创建nginx用户 后来决定用系统自带的nobody
 #nginx_user:
@@ -89,15 +61,14 @@ nginx_ngx_cache_purge_tar:
 #编译安装nginx,添加了一个可选的安装目录，方便以后需要自定义目录可以从pillar传过来
 nginx_configure:
   cmd.run:
-    - cwd: /usr/local/src/nginx-1.10.3
+    - cwd: /usr/local/src/nginx-1.14.1
     - names:
-      - ./configure --prefix={{ pillar.get('nginx_path','/usr/local/nginx') }} --with-http_stub_status_module --with-http_ssl_module --with-http_realip_module --add-module=/usr/local/src/ngx_cache_purge-2.3  --add-module=/usr/local/src/nginx_upstream_check_module-master&&make&&make install
+      - ./configure --prefix={{ pillar.get('nginx_path','/usr/local/nginx') }} --with-http_stub_status_module --with-http_ssl_module --with-http_realip_module --with-stream --add-module=/usr/local/src/nginx-module-vts&&make&&make install
     - unless: test -d {{ pillar.get('nginx_path','/usr/local/nginx') }}
     - require:
       - cmd: nginx_tar
       - pkg: nginx_pkg
-      - cmd: nginx_ngx_cache_purge_tar
-      - cmd: nginx_upstream_check_module-master_patch
+      - cmd: nginx-module-vts
 
 
 #创建web目录（可选，如果做lnmp使用的话要）
@@ -114,3 +85,12 @@ create_vhosts:
     - name: /bin/mkdir -p {{ pillar.get('nginx_path','/usr/local/nginx') }}/conf/vhosts
     - onlyif: test -d {{ pillar.get('nginx_path','/usr/local/nginx') }}/conf
     - unless: test -d {{ pillar.get('nginx_path','/usr/local/nginx') }}/conf/vhosts
+
+
+#创建log目录，因为我配置把日志文件单独存放了不在安装目录下
+create_log_dir:
+  cmd.run:
+    - name: /bin/mkdir -p /data/logs/nginx
+    - unless: test -d /data/logs/nginx
+    - require:
+      - cmd: create_vhosts

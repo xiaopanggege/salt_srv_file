@@ -5,8 +5,6 @@ nginx_conf:
     - name: {{ pillar.get('nginx_path','/usr/local/nginx') }}/conf/nginx.conf
     - source: salt://nginx/files/nginx.conf
     - template: jinja
-    - defaults:
-        num_cpus: {{grains['num_cpus']}}
     - onlyif: test -d {{ pillar.get('nginx_path','/usr/local/nginx') }}/conf
     - backup: minion
 
